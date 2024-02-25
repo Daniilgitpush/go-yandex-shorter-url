@@ -25,7 +25,7 @@ func NewShortener() *Shortener {
 }
 
 // Создает строку, случайной дилины, состоящей из случайных символов
-func (s *Shortener) GenerateRandomShortUrl() string {
+func (s *Shortener) GenerateRandomShortURL() string {
 	lenght := rand.Intn(9-4+1) + 4
 	text := make([]byte, lenght)
 	for i := range text {
@@ -36,7 +36,7 @@ func (s *Shortener) GenerateRandomShortUrl() string {
 
 // Проверка есть ли ссылка в базе
 // Проверка сгенерированный url не совпадает с другими
-func (s *Shortener) checkLinkShortUrl(link string) (string, error) {
+func (s *Shortener) checkLinkShortURL(link string) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if _, exists := s.shortLinkMap[link]; exists {
@@ -44,7 +44,7 @@ func (s *Shortener) checkLinkShortUrl(link string) (string, error) {
 	}
 	var newShortURL string
 	for {
-		newShortURL = s.GenerateRandomShortUrl()
+		newShortURL = s.GenerateRandomShortURL()
 		if _, exists := s.shortLinkMap[newShortURL]; !exists {
 			break
 		}
@@ -65,17 +65,17 @@ func (s *Shortener) PostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	link := string(responseData)
 	//Генерируем сокращенную ссылку, и проверяем
-	shortUrl, err := s.checkLinkShortUrl(link)
+	shortURL, err := s.checkLinkShortURL(link)
 	if err != nil {
 		w.Write([]byte("Ошибка при создании короткой ссылки"))
 		return
 	}
 
 	s.mu.Lock()
-	s.shortLinkMap[link] = shortUrl
+	s.shortLinkMap[link] = shortURL
 	s.mu.Unlock()
 
-	responeseURL := "http://localhost:8080/" + shortUrl
+	responeseURL := "http://localhost:8080/" + shortURL
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
@@ -85,7 +85,7 @@ func (s *Shortener) PostHandler(w http.ResponseWriter, r *http.Request) {
 
 //Проверяет короткий URL из GET запроса
 //Возвращает ключ(ссылку в начальном виде)
-func (s *Shortener) checkGetShortUrl(id string) (string, error) {
+func (s *Shortener) checkGetShortURL(id string) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for key, value := range s.shortLinkMap {
@@ -104,7 +104,7 @@ func (s *Shortener) GetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	link, err := s.checkGetShortUrl(strings.TrimPrefix(r.URL.Path, "/"))
+	link, err := s.checkGetShortURL(strings.TrimPrefix(r.URL.Path, "/"))
 	if err != nil {
 		fmt.Fprint(w, "Данная ссылка отсутствует")
 		return
