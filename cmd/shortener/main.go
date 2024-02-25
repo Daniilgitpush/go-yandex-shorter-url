@@ -3,7 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"net/http"
 	"sync"
@@ -19,6 +19,7 @@ type Shortener struct {
 
 func NewShortener() *Shortener {
 	rand.Seed(time.Now().UnixNano())
+	//rand.Seed(rand.New(rand.NewSource(time.Now().UnixNano())))
 	return &Shortener{
 		shortLinkMap: make(map[string]string),
 	}
@@ -40,7 +41,7 @@ func (s *Shortener) checkLinkShortURL(link string) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if _, exists := s.shortLinkMap[link]; exists {
-		return "", errors.New("Данная ссылка уже существует")
+		return "", errors.New("данная ссылка уже существует")
 	}
 	var newShortURL string
 	for {
@@ -59,7 +60,7 @@ func (s *Shortener) PostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//Достаем ссылку из запроса
-	responseData, err := ioutil.ReadAll(r.Body)
+	responseData, err := io.ReadAll(r.Body)
 	if err != nil {
 		panic(err)
 	}
@@ -94,7 +95,7 @@ func (s *Shortener) checkGetShortURL(id string) (string, error) {
 			return key, nil
 		}
 	}
-	return "", errors.New("Данная ссылка отсутствует")
+	return "", errors.New("данная ссылка отсутствует")
 }
 
 func (s *Shortener) GetHandler(w http.ResponseWriter, r *http.Request) {
