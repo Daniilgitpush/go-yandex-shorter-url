@@ -27,8 +27,8 @@ func NewShortener() *Shortener {
 
 // Создает строку, случайной дилины, состоящей из случайных символов
 func (s *Shortener) GenerateRandomShortURL() string {
-	lenght := rand.Intn(9-4+1) + 4
-	text := make([]byte, lenght)
+	length := rand.Intn(9-4+1) + 4
+	text := make([]byte, length)
 	for i := range text {
 		text[i] = byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"[rand.Intn(52)])
 	}
@@ -41,7 +41,7 @@ func (s *Shortener) checkLinkShortURL(link string) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if _, exists := s.shortLinkMap[link]; exists {
-		return "", errors.New("данная ссылка уже существует")
+		return "", errors.New("the link already exists")
 	}
 	var newShortURL string
 	for {
@@ -54,21 +54,17 @@ func (s *Shortener) checkLinkShortURL(link string) (string, error) {
 }
 
 func (s *Shortener) PostHandler(w http.ResponseWriter, r *http.Request) {
-	//Проверка на POST запрос
-	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
 	//Достаем ссылку из запроса
 	responseData, err := io.ReadAll(r.Body)
 	if err != nil {
-		panic(err)
+		http.Error(w, "Error reading the request", http.StatusInternalServerError)
+		return
 	}
 	link := string(responseData)
 	//Генерируем сокращенную ссылку, и проверяем
 	shortURL, err := s.checkLinkShortURL(link)
 	if err != nil {
-		w.Write([]byte("Ошибка при создании короткой ссылки"))
+		http.Error(w, "Error creating a short link", http.StatusInternalServerError)
 		return
 	}
 
@@ -91,23 +87,17 @@ func (s *Shortener) checkGetShortURL(id string) (string, error) {
 	defer s.mu.Unlock()
 	for key, value := range s.shortLinkMap {
 		if value == id {
-			fmt.Println(key)
 			return key, nil
 		}
 	}
-	return "", errors.New("данная ссылка отсутствует")
+	return "", errors.New("link is missing")
 }
 
 func (s *Shortener) GetHandler(w http.ResponseWriter, r *http.Request) {
-	//Проверка на GET запрос
-	if r.Method != http.MethodGet {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
 
 	link, err := s.checkGetShortURL(strings.TrimPrefix(r.URL.Path, "/"))
 	if err != nil {
-		fmt.Fprint(w, "Данная ссылка отсутствует")
+		http.Error(w, "Link is missing", http.StatusNotFound)
 		return
 	}
 	w.Header().Set("Location", link)
