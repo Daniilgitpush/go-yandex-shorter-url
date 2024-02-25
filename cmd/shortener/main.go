@@ -15,13 +15,13 @@ import (
 type Shortener struct {
 	shortLinkMap map[string]string
 	mu           sync.Mutex
+	rand         *rand.Rand
 }
 
 func NewShortener() *Shortener {
-	rand.Seed(time.Now().UnixNano())
-	//rand.Seed(rand.New(rand.NewSource(time.Now().UnixNano())))
 	return &Shortener{
 		shortLinkMap: make(map[string]string),
+		rand:          rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 }
 
