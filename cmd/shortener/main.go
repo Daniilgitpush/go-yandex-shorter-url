@@ -2,14 +2,13 @@
 package main
 
 import (
+	"github.com/Daniilgitpush/go-yandex-shorter-url/internal/app"
 	"net/http"
     "github.com/gorilla/mux"
-	"github.com/Daniilgitpush/go-yandex-shorter-url/internal/app/handlers"
-    "github.com/Daniilgitpush/go-yandex-shorter-url/internal/app/shortener"
 )
 
 func main() {
-	shortener := NewShortener()
+	shortener := app.NewShortener()
 	router := mux.NewRouter()
 	router.HandleFunc("/", shortener.PostHandler).Methods("POST")
 	router.HandleFunc("/{id}", shortener.GetHandler).Methods("GET")

@@ -1,5 +1,5 @@
-// go-yandex-shorter-url/internal/app/shortener/shortener.go
-package shortener
+// go-yandex-shorter-url/internal/app/shortener.go
+package app
 
 import (
 	"errors"

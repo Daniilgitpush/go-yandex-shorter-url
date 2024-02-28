@@ -1,12 +1,11 @@
-// go-yandex-shorter-url/internal/app/handlers/handlers.go
-package handlers
+// go-yandex-shorter-url/internal/app/handlers.go
+package app
 
 import (
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
-	"github.com/Daniilgitpush/go-yandex-shorter-url/internal/app/shortener"
 )
 
 //POST handler
