@@ -1,5 +1,5 @@
-// shortener.go
-package app
+// go-yandex-shorter-url/internal/app/shortener/shortener.go
+package shortener
 
 import (
 	"errors"
@@ -21,7 +21,7 @@ func NewShortener() *Shortener {
 	}
 }
 
-func (s *Shortener) GenerateRandomShortURL() string {
+func (s *Shortener) GenerateRandomShortURL(rand *rand.Rand) string {
 	length := rand.Intn(9-4+1) + 4
 	text := make([]byte, length)
 	for i := range text {
@@ -40,7 +40,7 @@ func (s *Shortener) checkLinkShortURL(link string) (string, error) {
 	}
 	var newShortURL string
 	for {
-		newShortURL = s.GenerateRandomShortURL()
+		newShortURL = s.GenerateRandomShortURL(s.rand)
 		if _, exists := s.shortLinkMap[newShortURL]; !exists {
 			break
 		}

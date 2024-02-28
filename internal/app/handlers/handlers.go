@@ -1,15 +1,17 @@
-// handlers.go
-package app
+// go-yandex-shorter-url/internal/app/handlers/handlers.go
+package handlers
 
 import (
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
+	"github.com/Daniilgitpush/go-yandex-shorter-url/internal/app/shortener"
 )
 
+//POST handler
 func (s *Shortener) PostHandler(w http.ResponseWriter, r *http.Request) {
-	// Реализация обработчика POST запросов
+	//Достаем ссылку из запроса
 	responseData, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Error reading the request", http.StatusInternalServerError)
@@ -35,8 +37,9 @@ func (s *Shortener) PostHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, responeseURL)
 }
 
+//GET handler
 func (s *Shortener) GetHandler(w http.ResponseWriter, r *http.Request) {
-	// Реализация обработчика GET запросов
+
 	link, err := s.checkGetShortURL(strings.TrimPrefix(r.URL.Path, "/"))
 	if err != nil {
 		http.Error(w, "Link is missing", http.StatusNotFound)

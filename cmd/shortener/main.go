@@ -1,108 +1,12 @@
+// go-yandex-shorter-url/cmd/shortener/main.go
 package main
 
 import (
-	"errors"
-	"fmt"
-	"io"
-	"math/rand"
 	"net/http"
-	"sync"
-	"time"
-	"strings"
-	"github.com/gorilla/mux"
+    "github.com/gorilla/mux"
+	"github.com/Daniilgitpush/go-yandex-shorter-url/internal/app/handlers"
+    "github.com/Daniilgitpush/go-yandex-shorter-url/internal/app/shortener"
 )
-
-type Shortener struct {
-	shortLinkMap map[string]string
-	mu           sync.Mutex
-	rand         *rand.Rand
-}
-
-func NewShortener() *Shortener {
-	return &Shortener{
-		shortLinkMap: make(map[string]string),
-		rand:         rand.New(rand.NewSource(time.Now().UnixNano())),
-	}
-}
-
-// Создает строку, случайной дилины, состоящей из случайных символов
-func (s *Shortener) GenerateRandomShortURL(rand *rand.Rand) string {
-	length := rand.Intn(9-4+1) + 4
-	text := make([]byte, length)
-	for i := range text {
-		text[i] = byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"[rand.Intn(52)])
-	}
-	return string(text)
-}
-
-// Проверка есть ли ссылка в базе
-// Проверка сгенерированный url не совпадает с другими
-func (s *Shortener) checkLinkShortURL(link string) (string, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if _, exists := s.shortLinkMap[link]; exists {
-		return "", errors.New("the link already exists")
-	}
-	var newShortURL string
-	for {
-		newShortURL = s.GenerateRandomShortURL(s.rand)
-		if _, exists := s.shortLinkMap[newShortURL]; !exists {
-			break
-		}
-	}
-	return newShortURL, nil
-}
-
-func (s *Shortener) PostHandler(w http.ResponseWriter, r *http.Request) {
-	//Достаем ссылку из запроса
-	responseData, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Error reading the request", http.StatusInternalServerError)
-		return
-	}
-	link := string(responseData)
-	//Генерируем сокращенную ссылку, и проверяем
-	shortURL, err := s.checkLinkShortURL(link)
-	if err != nil {
-		http.Error(w, "Error creating a short link", http.StatusInternalServerError)
-		return
-	}
-
-	s.mu.Lock()
-	s.shortLinkMap[link] = shortURL
-	s.mu.Unlock()
-
-	responeseURL := "http://localhost:8080/" + shortURL
-
-	w.Header().Set("Content-Type", "text/plain")
-	w.WriteHeader(http.StatusCreated)
-
-	fmt.Fprint(w, responeseURL)
-}
-
-//Проверяет короткий URL из GET запроса
-//Возвращает ключ(ссылку в начальном виде)
-func (s *Shortener) checkGetShortURL(id string) (string, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	for key, value := range s.shortLinkMap {
-		if value == id {
-			return key, nil
-		}
-	}
-	return "", errors.New("link is missing")
-}
-
-func (s *Shortener) GetHandler(w http.ResponseWriter, r *http.Request) {
-
-	link, err := s.checkGetShortURL(strings.TrimPrefix(r.URL.Path, "/"))
-	if err != nil {
-		http.Error(w, "Link is missing", http.StatusNotFound)
-		return
-	}
-	w.Header().Set("Location", link)
-	w.WriteHeader(http.StatusTemporaryRedirect)
-}
 
 func main() {
 	shortener := NewShortener()
